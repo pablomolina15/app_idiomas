@@ -1188,13 +1188,35 @@ function startRec() {
         else interim += e.results[i][0].transcript;
       }
       const el = document.getElementById('transcript');
+      el.className = 'transcript';
       el.textContent = (finalText + interim).trim() || '';
     };
-    recognition.onerror = () => {};
-    recognition.start();
+    recognition.onerror = (e) => {
+      const msgs = {
+        'not-allowed': '⚠️ Microphone blocked. Go to browser Settings → Site Permissions → Microphone and allow this site.',
+        'no-speech':   '⚠️ No speech detected. Speak clearly into your microphone.',
+        'network':     '⚠️ Network error. Check your connection and try again.',
+      };
+      const msg = msgs[e.error] || ('⚠️ Mic error: ' + e.error + '. Stop and try again.');
+      const el = document.getElementById('transcript');
+      el.className = 'transcript';
+      el.textContent = msg;
+    };
+    recognition.onend = () => {
+      // iOS Safari stops recognition when screen dims — restart automatically if still recording
+      if (recording) {
+        try { recognition.start(); } catch(e2) {}
+      }
+    };
+    try {
+      recognition.start();
+    } catch(e) {
+      document.getElementById('transcript').className = 'transcript';
+      document.getElementById('transcript').textContent = '⚠️ Could not access microphone. Use Chrome (Android) or Safari (iPhone) and allow mic permission.';
+    }
   } else {
-    // Demo fallback
-    document.getElementById('transcript').textContent = '[Voice recognition not available in this browser — a demo response will be used for feedback.]';
+    document.getElementById('transcript').className = 'transcript';
+    document.getElementById('transcript').textContent = '⚠️ Voice recognition not supported. Use Chrome on Android or Safari on iPhone.';
   }
 }
 
@@ -1315,44 +1337,149 @@ User level: ${S.level}. Their known weak areas: ${weakCtx}. Pay special attentio
 }
 
 // ═══════════════════════════════════════════
-// LISTENING
+// LISTENING — Web Speech Synthesis TTS
 // ═══════════════════════════════════════════
-let audioInterval = null;
-let audioSec = 0;
-let audioTotal = 180;
 let audioPlaying = false;
 let listenContent = null;
+let ttsUtterance = null;
+let ttsWords = [];
+let ttsWordIndex = 0;
+let ttsStartTime = 0;
+let ttsInterval = null;
+
+function pickVoice(accentLabel) {
+  const voices = window.speechSynthesis.getVoices();
+  // Try to match accent
+  const isGB = accentLabel.includes('British');
+  const isAU = accentLabel.includes('Australian');
+  const isCA = accentLabel.includes('Canadian');
+  
+  // Preferred voice name fragments per accent
+  const prefs = isGB  ? ['Google UK English', 'Daniel', 'Serena', 'en-GB'] :
+                isAU  ? ['Karen', 'en-AU'] :
+                isCA  ? ['en-CA'] :
+                        ['Google US English', 'Samantha', 'Alex', 'en-US'];
+  
+  for (const pref of prefs) {
+    const v = voices.find(v => v.name.includes(pref) || v.lang.startsWith(pref));
+    if (v) return v;
+  }
+  // Fallback: any English voice
+  return voices.find(v => v.lang.startsWith('en')) || voices[0] || null;
+}
+
+function stopTTS() {
+  window.speechSynthesis.cancel();
+  clearInterval(ttsInterval);
+  audioPlaying = false;
+  ttsUtterance = null;
+  document.getElementById('playBtn').textContent = '▶ Play';
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('pCurrent').textContent = '0:00';
+  // Remove word highlights
+  document.querySelectorAll('#readText .word').forEach(w => w.style.background = '');
+}
 
 function toggleAudio() {
+  if (!listenContent) { toast('Wait for content to load…'); return; }
+
   if (audioPlaying) {
-    clearInterval(audioInterval);
+    window.speechSynthesis.pause();
+    clearInterval(ttsInterval);
     audioPlaying = false;
-    document.getElementById('playBtn').textContent = '▶ Play';
-  } else {
-    if (audioSec >= audioTotal) audioSec = 0;
+    document.getElementById('playBtn').textContent = '▶ Resume';
+    return;
+  }
+
+  // Resume if paused
+  if (window.speechSynthesis.paused) {
+    window.speechSynthesis.resume();
     audioPlaying = true;
     document.getElementById('playBtn').textContent = '⏸ Pause';
-    audioInterval = setInterval(() => {
-      audioSec = Math.min(audioSec + 1, audioTotal);
-      const pct = (audioSec / audioTotal) * 100;
-      document.getElementById('progFill').style.width = pct + '%';
-      const m = Math.floor(audioSec/60), s = audioSec%60;
-      document.getElementById('pCurrent').textContent = `${m}:${s.toString().padStart(2,'0')}`;
-      if (audioSec >= audioTotal) {
-        clearInterval(audioInterval);
-        audioPlaying = false;
-        document.getElementById('playBtn').textContent = '↺ Replay';
-      }
-    }, 1000);
+    startProgressTimer();
+    return;
   }
+
+  // Fresh start
+  window.speechSynthesis.cancel();
+  ttsWords = document.querySelectorAll('#readText .word');
+  ttsWordIndex = 0;
+
+  ttsUtterance = new SpeechSynthesisUtterance(listenContent.transcript);
+  ttsUtterance.rate = 0.88;
+  ttsUtterance.pitch = 1.0;
+  ttsUtterance.volume = 1.0;
+
+  // Wait for voices to load then pick one
+  const setVoice = () => {
+    const v = pickVoice(document.getElementById('aBadgeAccent').textContent);
+    if (v) ttsUtterance.voice = v;
+  };
+  if (window.speechSynthesis.getVoices().length > 0) { setVoice(); }
+  else { window.speechSynthesis.onvoiceschanged = setVoice; }
+
+  // Word boundary — highlight current word
+  ttsUtterance.onboundary = (e) => {
+    if (e.name !== 'word') return;
+    ttsWords.forEach(w => w.style.background = '');
+    // Find word by char index
+    const words = listenContent.transcript.split(/\s+/);
+    let charCount = 0, idx = 0;
+    for (let i = 0; i < words.length; i++) {
+      if (charCount >= e.charIndex) { idx = i; break; }
+      charCount += words[i].length + 1;
+    }
+    if (ttsWords[idx]) {
+      ttsWords[idx].style.background = 'rgba(124,106,247,0.35)';
+      ttsWords[idx].style.borderRadius = '3px';
+      ttsWords[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  };
+
+  ttsUtterance.onstart = () => {
+    audioPlaying = true;
+    ttsStartTime = Date.now();
+    document.getElementById('playBtn').textContent = '⏸ Pause';
+    startProgressTimer();
+  };
+
+  ttsUtterance.onend = () => {
+    clearInterval(ttsInterval);
+    audioPlaying = false;
+    ttsWords.forEach(w => w.style.background = '');
+    document.getElementById('playBtn').textContent = '↺ Replay';
+    document.getElementById('progFill').style.width = '100%';
+  };
+
+  ttsUtterance.onerror = (e) => {
+    clearInterval(ttsInterval);
+    audioPlaying = false;
+    document.getElementById('playBtn').textContent = '▶ Play';
+    if (e.error !== 'interrupted') toast('Audio error: ' + e.error);
+  };
+
+  window.speechSynthesis.speak(ttsUtterance);
+}
+
+function startProgressTimer() {
+  clearInterval(ttsInterval);
+  const total = listenContent.durationSeconds || 120;
+  document.getElementById('pTotal').textContent = fmt(total);
+  ttsInterval = setInterval(() => {
+    const elapsed = Math.min((Date.now() - ttsStartTime) / 1000, total);
+    document.getElementById('progFill').style.width = (elapsed / total * 100) + '%';
+    document.getElementById('pCurrent').textContent = fmt(elapsed);
+  }, 300);
+}
+
+function fmt(sec) {
+  const s = Math.floor(sec);
+  return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
 }
 
 async function newListening() {
-  clearInterval(audioInterval);
-  audioPlaying = false;
-  audioSec = 0;
-  document.getElementById('progFill').style.width = '0%';
-  document.getElementById('pCurrent').textContent = '0:00';
+  stopTTS();
+  listenContent = null;
   document.getElementById('playBtn').textContent = '▶ Play';
   document.getElementById('readText').innerHTML = spinner();
   document.getElementById('quizQ').textContent = 'Loading…';
@@ -1395,11 +1522,10 @@ Schema:
     const clean = raw.replace(/```json|```/g,'').trim();
     listenContent = JSON.parse(clean);
 
-    audioTotal = listenContent.durationSeconds || 180;
-    const tm = Math.floor(audioTotal/60), ts = audioTotal%60;
-    document.getElementById('pTotal').textContent = `${tm}:${ts.toString().padStart(2,'0')}`;
+    const dur = listenContent.durationSeconds || 120;
+    document.getElementById('pTotal').textContent = fmt(dur);
     document.getElementById('aTitle').textContent = listenContent.title || topic.replace(/\b\w/g,c=>c.toUpperCase());
-    document.getElementById('aBadgeDur').textContent = `~${Math.round(audioTotal/60)} min`;
+    document.getElementById('aBadgeDur').textContent = `~${Math.max(1, Math.round(dur/60))} min`;
 
     document.getElementById('readText').innerHTML =
       listenContent.transcript.split(' ').map(w => `<span class="word">${w} </span>`).join('');
