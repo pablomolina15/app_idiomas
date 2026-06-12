@@ -890,7 +890,7 @@ html, body {
 // ═══════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════
-const API = 'https://api.anthropic.com/v1/messages';
+const API = '/api/claude';
 const MODEL = 'claude-sonnet-4-6';
 
 const LEVELS = ['A1','A2','B1','B2','C1','C2'];
@@ -1203,10 +1203,7 @@ function startRec() {
       el.textContent = msg;
     };
     recognition.onend = () => {
-      // iOS Safari stops recognition when screen dims — restart automatically if still recording
-      if (recording) {
-        try { recognition.start(); } catch(e2) {}
-      }
+      // Do not auto-restart — causes duplicate text on Android
     };
     try {
       recognition.start();
