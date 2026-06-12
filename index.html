@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#12121f">
+<title>SpeakUp</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg: #12121f;
+  --surface: #1c1c2e;
+  --surface2: #24243a;
+  --border: #2e2e48;
+  --accent: #7c6af7;
+  --accent-soft: rgba(124,106,247,0.12);
+  --accent2: #f7836a;
+  --accent2-soft: rgba(247,131,106,0.12);
+  --green: #4fd1a5;
+  --green-soft: rgba(79,209,165,0.12);
+  --yellow: #f7c86a;
+  --red: #f76a6a;
+  --text: #e8e8f0;
+  --muted: #7070a0;
+  --muted2: #4a4a6a;
+  --white: #ffffff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  height: 100%;
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overscroll-behavior: none;
+}
+
+/* ── LAYOUT ── */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* ── HEADER ── */
+.header {
+  padding: 16px 20px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px;
+  color: var(--white);
+  letter-spacing: -0.3px;
+}
+.logo em { color: var(--accent); font-style: normal; }
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.streak-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--yellow);
+}
+
+.level-pill {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.3px;
+}
+
+/* ── SCROLL BODY ── */
+.scroll-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 16px 100px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  display: flex;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 0 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.nav-icon { font-size: 20px; line-height: 1; }
+.nav-label { font-size: 10px; font-weight: 500; color: var(--muted); letter-spacing: 0.3px; }
+.nav-item.active .nav-label { color: var(--accent); }
+.nav-item.active .nav-icon { filter: drop-shadow(0 0 6px var(--accent)); }
+
+/* ── PANELS ── */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+
+.card-eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.card-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  color: var(--white);
+  line-height: 1.35;
+  margin-bottom: 6px;
+}
+
+.card-body {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+/* ── LEVEL BAR ── */
+.level-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+
+.level-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.level-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.level-xp {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.xp-track {
+  height: 6px;
+  background: var(--surface2);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.xp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #a78bfa);
+  border-radius: 3px;
+  transition: width 0.6s cubic-bezier(.4,0,.2,1);
+}
+
+.level-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted2);
+}
+
+/* ── PROMPT CARD ── */
+.prompt-card {
+  background: linear-gradient(135deg, var(--surface2) 0%, #1a1a30 100%);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 14px;
+  position: relative;
+}
+
+.prompt-eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.prompt-text {
+  font-family: 'DM Serif Display', serif;
+  font-size: 17px;
+  color: var(--white);
+  line-height: 1.45;
+  margin-bottom: 10px;
+}
+
+.prompt-hint {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ── TOPIC CHIPS ── */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.chip {
+  padding: 7px 13px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.chip.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── VOICE AREA ── */
+.voice-zone {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 20px;
+  text-align: center;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.waveform {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 48px;
+  margin-bottom: 16px;
+}
+
+.wbar {
+  width: 3px;
+  background: var(--accent);
+  border-radius: 2px;
+  height: 6px;
+  opacity: 0.4;
+  transition: height 0.08s ease, opacity 0.08s;
+}
+
+.wbar.live {
+  opacity: 1;
+  animation: wv 0.5s ease-in-out infinite alternate;
+}
+.wbar.live:nth-child(1) { animation-duration: 0.4s; }
+.wbar.live:nth-child(2) { animation-duration: 0.55s; animation-delay: 0.05s; }
+.wbar.live:nth-child(3) { animation-duration: 0.45s; animation-delay: 0.1s; }
+.wbar.live:nth-child(4) { animation-duration: 0.6s; animation-delay: 0.07s; }
+.wbar.live:nth-child(5) { animation-duration: 0.5s; animation-delay: 0.12s; }
+.wbar.live:nth-child(6) { animation-duration: 0.42s; animation-delay: 0.04s; }
+.wbar.live:nth-child(7) { animation-duration: 0.58s; animation-delay: 0.09s; }
+.wbar.live:nth-child(8) { animation-duration: 0.47s; animation-delay: 0.06s; }
+.wbar.live:nth-child(9) { animation-duration: 0.53s; animation-delay: 0.11s; }
+.wbar.live:nth-child(10) { animation-duration: 0.44s; animation-delay: 0.03s; }
+.wbar.live:nth-child(11) { animation-duration: 0.56s; animation-delay: 0.08s; }
+
+@keyframes wv {
+  from { height: 6px; }
+  to { height: 36px; }
+}
+
+.voice-status { font-size: 12px; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.5px; }
+.voice-timer {
+  font-family: 'DM Serif Display', serif;
+  font-size: 40px;
+  color: var(--white);
+  font-weight: 400;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 13px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: 0.2px;
+  width: 100%;
+  -webkit-appearance: none;
+}
+
+.btn-accent { background: var(--accent); color: white; }
+.btn-accent:active { background: #6a59e0; }
+
+.btn-red { background: var(--red); color: white; }
+.btn-red:active { background: #d45555; }
+
+.btn-ghost {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.btn-ghost:active { background: var(--border); }
+
+.btn-row { display: flex; gap: 10px; }
+.btn-row .btn { flex: 1; }
+
+/* ── TRANSCRIPT ── */
+.transcript {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text);
+  font-style: italic;
+  min-height: 72px;
+  margin-bottom: 12px;
+}
+
+.transcript.empty { font-style: normal; color: var(--muted2); font-size: 13px; }
+
+/* ── FEEDBACK ── */
+.feedback {
+  background: var(--green-soft);
+  border: 1px solid rgba(79,209,165,0.25);
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 4px;
+}
+
+.feedback.error {
+  background: rgba(247,106,106,0.08);
+  border-color: rgba(247,106,106,0.25);
+}
+
+.feedback-head {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 12px;
+}
+.feedback.error .feedback-head { color: var(--red); }
+
+.score-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.score-tag {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dot-g { background: var(--green); }
+.dot-y { background: var(--yellow); }
+.dot-r { background: var(--red); }
+
+.fb-line {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.fb-line:last-child { margin-bottom: 0; }
+
+.fb-label {
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 3px;
+}
+
+/* ── WEAK AREAS ── */
+.weak-tag {
+  display: inline-block;
+  background: rgba(247,131,106,0.12);
+  border: 1px solid rgba(247,131,106,0.3);
+  color: var(--accent2);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  margin: 3px 3px 0 0;
+}
+
+/* ── LISTENING ── */
+.audio-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.audio-header {
+  background: linear-gradient(135deg, #1a2a3a 0%, #1a1a30 100%);
+  padding: 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.audio-meta {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.audio-icon {
+  width: 42px;
+  height: 42px;
+  background: rgba(124,106,247,0.2);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.audio-info { flex: 1; }
+.audio-title { font-weight: 600; font-size: 15px; color: var(--white); margin-bottom: 4px; line-height: 1.3; }
+.audio-sub { font-size: 11px; color: var(--muted); }
+
+.badge-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+}
+.badge-level { background: var(--accent-soft); color: var(--accent); border: 1px solid rgba(124,106,247,0.3); }
+.badge-accent { background: rgba(79,209,165,0.1); color: var(--green); border: 1px solid rgba(79,209,165,0.25); }
+.badge-dur { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+
+.audio-controls { padding: 14px 18px; }
+
+.progress-row {
+  margin-bottom: 6px;
+}
+
+.prog-track {
+  height: 4px;
+  background: var(--surface2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.prog-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.5s linear;
+}
+
+.prog-times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 14px;
+}
+
+/* ── TRANSCRIPT READING ── */
+.reading-text {
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--text);
+  padding: 16px 18px;
+}
+
+.reading-text .word {
+  cursor: default;
+  border-radius: 3px;
+  transition: background 0.1s;
+}
+
+/* ── QUIZ ── */
+.quiz-q {
+  font-family: 'DM Serif Display', serif;
+  font-size: 17px;
+  color: var(--white);
+  line-height: 1.4;
+  margin-bottom: 14px;
+}
+
+.quiz-opts { display: flex; flex-direction: column; gap: 8px; }
+
+.quiz-opt {
+  padding: 13px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--surface2);
+  color: var(--text);
+  text-align: left;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.12s;
+  -webkit-appearance: none;
+  width: 100%;
+}
+
+.quiz-opt:active:not(:disabled) { transform: scale(0.99); }
+.quiz-opt:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.quiz-opt.correct { background: var(--green-soft); border-color: var(--green); color: var(--green); }
+.quiz-opt.wrong { background: rgba(247,106,106,0.1); border-color: var(--red); color: var(--red); }
+.quiz-opt:disabled { cursor: default; }
+
+.quiz-result {
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+.quiz-result.correct { background: var(--green-soft); color: var(--green); }
+.quiz-result.wrong { background: rgba(247,106,106,0.1); color: var(--red); }
+
+/* ── PROGRESS TAB ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 10px;
+  text-align: center;
+}
+
+.stat-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 26px;
+  color: var(--white);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  font-weight: 500;
+}
+
+.history-item {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.history-item:last-child { border-bottom: none; }
+
+.history-topic {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 5px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.history-scores {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.history-score {
+  font-size: 12px;
+  color: var(--text);
+}
+
+.history-summary {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ── LOADING ── */
+.spinner {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.spinner span {
+  width: 5px; height: 5px;
+  background: var(--muted);
+  border-radius: 50%;
+  animation: sp 1s infinite;
+}
+.spinner span:nth-child(2) { animation-delay: 0.15s; }
+.spinner span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes sp {
+  0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  opacity: 0;
+  transition: all 0.25s;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 999;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── SCROLL ── */
+::-webkit-scrollbar { width: 0; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="logo">Speak<em>Up</em></div>
+    <div class="header-right">
+      <div class="streak-pill">🔥 <span id="hStreak">0</span></div>
+      <div class="level-pill" id="hLevel">A2</div>
+    </div>
+  </div>
+
+  <div class="scroll-body" id="scrollBody">
+
+    <!-- ══ SPEAKING ══ -->
+    <div class="panel active" id="panel-speak">
+
+      <div class="level-section">
+        <div class="level-header">
+          <div class="level-name" id="lvlName">Level A2</div>
+          <div class="level-xp" id="lvlXP">0 / 100 XP</div>
+        </div>
+        <div class="xp-track"><div class="xp-fill" id="xpBar" style="width:0%"></div></div>
+        <div class="level-labels">
+          <span id="lvlCurrent">A2</span><span id="lvlNext">B1</span>
+        </div>
+      </div>
+
+      <div class="prompt-card" id="promptCard">
+        <div class="prompt-eyebrow">Today's prompt · <span id="topicLabel">Any topic</span></div>
+        <div class="prompt-text" id="promptText">Loading your personalised prompt…</div>
+        <div class="prompt-hint" id="promptHint">💡 Speak naturally for 60–90 seconds. Don't stop to correct yourself.</div>
+      </div>
+
+      <div class="chip-row" id="topicChips">
+        <div class="chip active" data-topic="any">🎲 Any</div>
+        <div class="chip" data-topic="travel">✈️ Travel</div>
+        <div class="chip" data-topic="work">💼 Work</div>
+        <div class="chip" data-topic="daily">☕ Daily</div>
+        <div class="chip" data-topic="opinion">💬 Opinion</div>
+        <div class="chip" data-topic="story">📖 Story</div>
+      </div>
+
+      <div class="card" style="padding-bottom:14px">
+        <div class="card-eyebrow">Your answer</div>
+
+        <div class="voice-zone">
+          <div class="waveform" id="waveform">
+            <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
+            <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
+            <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
+            <div class="wbar"></div><div class="wbar"></div>
+          </div>
+          <div class="voice-status" id="vStatus">Tap to start</div>
+          <div class="voice-timer" id="vTimer">0:00</div>
+        </div>
+
+        <div id="recBtns" style="margin-bottom:12px">
+          <button class="btn btn-accent" id="startBtn" onclick="startRec()">🎙 Start speaking</button>
+          <button class="btn btn-red" id="stopBtn" onclick="stopRec()" style="display:none">⏹ Stop & get feedback</button>
+        </div>
+
+        <div class="transcript empty" id="transcript">Your words will appear here…</div>
+        <div id="feedbackWrap"></div>
+      </div>
+
+    </div>
+
+    <!-- ══ LISTENING ══ -->
+    <div class="panel" id="panel-listen">
+
+      <div class="audio-card" id="audioCard">
+        <div class="audio-header">
+          <div class="audio-meta">
+            <div class="audio-icon">🎙</div>
+            <div class="audio-info">
+              <div class="audio-title" id="aTitle">Loading…</div>
+              <div class="audio-sub">AI-generated practice clip</div>
+            </div>
+          </div>
+          <div class="badge-row">
+            <span class="badge badge-level" id="aBadgeLevel">—</span>
+            <span class="badge badge-accent" id="aBadgeAccent">—</span>
+            <span class="badge badge-dur" id="aBadgeDur">—</span>
+          </div>
+        </div>
+        <div class="audio-controls">
+          <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+          <div class="prog-times">
+            <span id="pCurrent">0:00</span>
+            <span id="pTotal">—</span>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-accent" id="playBtn" onclick="toggleAudio()">▶ Play</button>
+            <button class="btn btn-ghost" onclick="newListening()">↻ New clip</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="readCard">
+        <div class="card-eyebrow">Read along</div>
+        <div class="reading-text" id="readText"><div class="spinner"><span></span><span></span><span></span></div></div>
+      </div>
+
+      <div class="card" id="quizCard">
+        <div class="card-eyebrow">Comprehension</div>
+        <div class="quiz-q" id="quizQ">Loading question…</div>
+        <div class="quiz-opts" id="quizOpts"></div>
+        <div id="quizRes" style="display:none" class="quiz-result"></div>
+      </div>
+
+    </div>
+
+    <!-- ══ PROGRESS ══ -->
+    <div class="panel" id="panel-progress">
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-num" id="pStreak">0</div>
+          <div class="stat-label">Streak</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="pSessions">0</div>
+          <div class="stat-label">Sessions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="pMinutes">0</div>
+          <div class="stat-label">Min spoken</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-eyebrow">Your level</div>
+        <div class="level-header" style="margin-bottom:10px">
+          <div class="level-name" id="pLvlName">A2</div>
+          <div class="level-xp" id="pLvlXP">0 XP total</div>
+        </div>
+        <div class="xp-track"><div class="xp-fill" id="pXpBar" style="width:0%"></div></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px" id="pLvlHint">Keep practising to advance to B1.</div>
+      </div>
+
+      <div class="card" id="weakCard">
+        <div class="card-eyebrow">Areas to work on</div>
+        <div id="weakList"><div style="font-size:13px;color:var(--muted2)">Complete sessions to see your weak areas.</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-eyebrow">Recent sessions</div>
+        <div id="historyList"><div style="font-size:13px;color:var(--muted2)">No sessions yet. Start speaking!</div></div>
+      </div>
+
+    </div>
+
+  </div><!-- /scroll-body -->
+
+  <nav class="bottom-nav">
+    <div class="nav-item active" id="nav-speak" onclick="switchTab('speak')">
+      <div class="nav-icon">🎙</div>
+      <div class="nav-label">Speak</div>
+    </div>
+    <div class="nav-item" id="nav-listen" onclick="switchTab('listen')">
+      <div class="nav-icon">🎧</div>
+      <div class="nav-label">Listen</div>
+    </div>
+    <div class="nav-item" id="nav-progress" onclick="switchTab('progress')">
+      <div class="nav-icon">📊</div>
+      <div class="nav-label">Progress</div>
+    </div>
+  </nav>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════
+const API = 'https://api.anthropic.com/v1/messages';
+const MODEL = 'claude-sonnet-4-6';
+
+const LEVELS = ['A1','A2','B1','B2','C1','C2'];
+const LEVEL_XP = { A1:100, A2:200, B1:300, B2:400, C1:500, C2:999 };
+const LEVEL_LABELS = {
+  A1:'Beginner', A2:'Elementary', B1:'Intermediate',
+  B2:'Upper-Intermediate', C1:'Advanced', C2:'Mastery'
+};
+
+// ═══════════════════════════════════════════
+// STATE — persisted in localStorage
+// ═══════════════════════════════════════════
+function defaultState() {
+  return {
+    level: 'A2',
+    xp: 0,
+    streak: 0,
+    lastDate: '',
+    sessions: 0,
+    totalSeconds: 0,
+    history: [],           // last 20 sessions
+    weakAreas: {},         // { "grammar: articles": 3, ... }
+    currentTopic: 'any',
+    listeningDone: 0,
+  };
+}
+
+let S = (() => {
+  try { return JSON.parse(localStorage.getItem('speakup_v2')) || defaultState(); }
+  catch(e) { return defaultState(); }
+})();
+
+function save() {
+  localStorage.setItem('speakup_v2', JSON.stringify(S));
+}
+
+// ═══════════════════════════════════════════
+// STREAK CHECK
+// ═══════════════════════════════════════════
+function checkStreak() {
+  const today = new Date().toDateString();
+  if (S.lastDate === today) return;
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  if (S.lastDate === yesterday) S.streak++;
+  else if (S.lastDate !== today) S.streak = 1;
+  S.lastDate = today;
+  save();
+}
+checkStreak();
+
+// ═══════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════
+function toast(msg, dur=2200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function spinner() {
+  return '<div class="spinner"><span></span><span></span><span></span></div>';
+}
+
+function dotColor(score) {
+  if (score >= 8) return 'dot-g';
+  if (score >= 6) return 'dot-y';
+  return 'dot-r';
+}
+
+function updateHeader() {
+  document.getElementById('hStreak').textContent = S.streak + ' day' + (S.streak !== 1 ? 's' : '');
+  document.getElementById('hLevel').textContent = S.level;
+}
+
+function updateLevelUI() {
+  const lvl = S.level;
+  const needed = LEVEL_XP[lvl] || 100;
+  const pct = Math.min(100, Math.round((S.xp / needed) * 100));
+  const nextLvl = LEVELS[LEVELS.indexOf(lvl) + 1] || lvl;
+
+  document.getElementById('lvlName').textContent = LEVEL_LABELS[lvl] || lvl;
+  document.getElementById('lvlXP').textContent = `${S.xp} / ${needed} XP`;
+  document.getElementById('xpBar').style.width = pct + '%';
+  document.getElementById('lvlCurrent').textContent = lvl;
+  document.getElementById('lvlNext').textContent = nextLvl;
+
+  document.getElementById('pLvlName').textContent = `${LEVEL_LABELS[lvl]} (${lvl})`;
+  document.getElementById('pLvlXP').textContent = `${S.xp} XP total`;
+  document.getElementById('pXpBar').style.width = pct + '%';
+  document.getElementById('pLvlHint').textContent =
+    lvl === 'C2' ? 'You\'ve reached the top level. Keep practising!' :
+    `${needed - S.xp} XP to reach ${nextLvl}.`;
+
+  document.getElementById('pStreak').textContent = S.streak;
+  document.getElementById('pSessions').textContent = S.sessions;
+  document.getElementById('pMinutes').textContent = Math.round(S.totalSeconds / 60);
+}
+
+function gainXP(amount) {
+  S.xp += amount;
+  const lvl = S.level;
+  const needed = LEVEL_XP[lvl] || 100;
+  if (S.xp >= needed && lvl !== 'C2') {
+    const nextIdx = LEVELS.indexOf(lvl) + 1;
+    if (nextIdx < LEVELS.length) {
+      S.level = LEVELS[nextIdx];
+      S.xp = S.xp - needed;
+      toast(`🎉 Level up! You're now ${S.level}`);
+    }
+  }
+  save();
+  updateHeader();
+  updateLevelUI();
+}
+
+function trackWeakArea(areas) {
+  areas.forEach(a => {
+    const key = a.toLowerCase().trim();
+    S.weakAreas[key] = (S.weakAreas[key] || 0) + 1;
+  });
+  save();
+  renderWeakAreas();
+}
+
+function renderWeakAreas() {
+  const list = Object.entries(S.weakAreas)
+    .sort((a,b) => b[1]-a[1])
+    .slice(0, 8);
+  const el = document.getElementById('weakList');
+  if (!list.length) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--muted2)">Complete sessions to see your weak areas.</div>';
+    return;
+  }
+  el.innerHTML = list.map(([k,v]) =>
+    `<span class="weak-tag">${k} ×${v}</span>`
+  ).join('');
+}
+
+function renderHistory() {
+  const el = document.getElementById('historyList');
+  if (!S.history.length) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--muted2)">No sessions yet. Start speaking!</div>';
+    return;
+  }
+  el.innerHTML = S.history.slice(0,10).map(h => `
+    <div class="history-item">
+      <div class="history-topic">
+        <span>${h.topic}</span>
+        <span style="color:var(--muted2)">${h.date}</span>
+      </div>
+      <div class="history-scores">
+        <span class="history-score">Fluency <strong style="color:${scoreCol(h.f)}">${h.f}</strong></span>
+        <span class="history-score">Grammar <strong style="color:${scoreCol(h.g)}">${h.g}</strong></span>
+        <span class="history-score">Vocab <strong style="color:${scoreCol(h.v)}">${h.v}</strong></span>
+      </div>
+      <div class="history-summary">${h.summary}</div>
+    </div>`).join('');
+}
+
+function scoreCol(s) {
+  if (s >= 8) return 'var(--green)';
+  if (s >= 6) return 'var(--yellow)';
+  return 'var(--red)';
+}
+
+// ═══════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════
+let currentTab = 'speak';
+let listeningLoaded = false;
+
+function switchTab(tab) {
+  currentTab = tab;
+  ['speak','listen','progress'].forEach(t => {
+    document.getElementById('panel-'+t).classList.toggle('active', t===tab);
+    document.getElementById('nav-'+t).classList.toggle('active', t===tab);
+  });
+  document.getElementById('scrollBody').scrollTop = 0;
+  if (tab === 'progress') { renderWeakAreas(); renderHistory(); updateLevelUI(); }
+  if (tab === 'listen' && !listeningLoaded) { listeningLoaded=true; newListening(); }
+}
+
+// ═══════════════════════════════════════════
+// TOPIC CHIPS
+// ═══════════════════════════════════════════
+document.getElementById('topicChips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  S.currentTopic = chip.dataset.topic;
+  save();
+  loadPrompt();
+});
+
+// ═══════════════════════════════════════════
+// PROMPT GENERATION
+// ═══════════════════════════════════════════
+const FALLBACK_PROMPTS = {
+  any:     ["Tell me about something that surprised you recently.", "What's a skill you wish you had learned earlier?"],
+  travel:  ["Describe a trip that didn't go as planned.", "If you could live abroad for a year, where would you go and why?"],
+  work:    ["Talk about a challenge you solved at work.", "Describe your ideal work environment."],
+  daily:   ["Walk me through your morning routine.", "What's a small habit that makes a big difference for you?"],
+  opinion: ["Do you think remote work is better than office work? Why?", "What's a popular opinion you strongly disagree with?"],
+  story:   ["Tell me a funny story that happened to you recently.", "Describe a moment you're really proud of."]
+};
+
+async function loadPrompt() {
+  const topic = S.currentTopic;
+  document.getElementById('topicLabel').textContent =
+    {any:'Any topic',travel:'Travel',work:'Work',daily:'Daily life',opinion:'Opinion',story:'Story'}[topic] || topic;
+  document.getElementById('promptText').textContent = 'Generating your prompt…';
+
+  // Build weak areas context
+  const weakCtx = Object.entries(S.weakAreas).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k])=>k).join(', ') || 'none identified yet';
+  const recentTopics = S.history.slice(0,3).map(h=>h.topic).join(', ') || 'none';
+
+  try {
+    const res = await fetch(API, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 200,
+        system: `You generate a single speaking practice prompt for an English learner. 
+Level: ${S.level} (${LEVEL_LABELS[S.level]}).
+Topic area: ${topic === 'any' ? 'anything interesting' : topic}.
+Their weak areas: ${weakCtx}.
+Recent topics used: ${recentTopics} — avoid repeating these.
+Output ONLY the prompt question, 1-2 sentences, no quotes, no preamble. 
+Calibrate vocabulary and complexity to ${S.level} level.`,
+        messages: [{role:'user', content:'Generate the prompt.'}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.map(b=>b.text||'').join('').trim();
+    if (text) {
+      document.getElementById('promptText').textContent = text;
+    } else { throw new Error('empty'); }
+  } catch(e) {
+    const list = FALLBACK_PROMPTS[topic] || FALLBACK_PROMPTS.any;
+    document.getElementById('promptText').textContent = list[Math.floor(Math.random()*list.length)];
+  }
+
+  const hints = {
+    A1: '💡 Use simple sentences. Focus on being understood.',
+    A2: '💡 Try to speak for 45 seconds. Use connectors like "and", "but", "because".',
+    B1: '💡 Aim for 60-90 seconds. Include examples and details.',
+    B2: '💡 Use complex sentences and varied vocabulary. Aim for 2 minutes.',
+    C1: '💡 Show nuance and precision. Discuss multiple perspectives.',
+    C2: '💡 Speak with the fluency and precision of a native speaker.'
+  };
+  document.getElementById('promptHint').textContent = hints[S.level] || hints.B1;
+}
+
+// ═══════════════════════════════════════════
+// RECORDING
+// ═══════════════════════════════════════════
+let recording = false;
+let recTimer = null;
+let recSeconds = 0;
+let recognition = null;
+let finalText = '';
+
+function startRec() {
+  finalText = '';
+  document.getElementById('transcript').textContent = '';
+  document.getElementById('transcript').className = 'transcript';
+  document.getElementById('feedbackWrap').innerHTML = '';
+  document.getElementById('startBtn').style.display = 'none';
+  document.getElementById('stopBtn').style.display = 'block';
+
+  recording = true;
+  recSeconds = 0;
+  recTimer = setInterval(() => {
+    recSeconds++;
+    const m = Math.floor(recSeconds/60), s = recSeconds%60;
+    document.getElementById('vTimer').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+  }, 1000);
+
+  document.querySelectorAll('.wbar').forEach(b => b.classList.add('live'));
+  document.getElementById('vStatus').textContent = 'Listening…';
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SR) {
+    recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    recognition.onresult = e => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
+        else interim += e.results[i][0].transcript;
+      }
+      const el = document.getElementById('transcript');
+      el.textContent = (finalText + interim).trim() || '';
+    };
+    recognition.onerror = () => {};
+    recognition.start();
+  } else {
+    // Demo fallback
+    document.getElementById('transcript').textContent = '[Voice recognition not available in this browser — a demo response will be used for feedback.]';
+  }
+}
+
+function stopRec() {
+  if (!recording) return;
+  recording = false;
+  clearInterval(recTimer);
+
+  if (recognition) { recognition.stop(); recognition = null; }
+  document.querySelectorAll('.wbar').forEach(b => b.classList.remove('live'));
+  document.getElementById('stopBtn').style.display = 'none';
+  document.getElementById('startBtn').style.display = 'block';
+  document.getElementById('vStatus').textContent = 'Analysing…';
+
+  S.sessions++;
+  S.totalSeconds += recSeconds;
+  save();
+  document.getElementById('pSessions').textContent = S.sessions;
+  document.getElementById('pMinutes').textContent = Math.round(S.totalSeconds/60);
+
+  const spoken = finalText.trim() ||
+    `I think the topic is really interesting. Last summer I went to Portugal with my family and it was an amazing experience. The food was delicious, especially the pastéis de nata. We visited Lisbon and Porto. The people were very friendly and helpful. I would definitely recommend visiting Portugal to anyone who wants to discover a beautiful European country with great weather and culture.`;
+
+  document.getElementById('transcript').className = 'transcript';
+  document.getElementById('transcript').textContent = spoken;
+  getFeedback(spoken);
+}
+
+// ═══════════════════════════════════════════
+// AI FEEDBACK
+// ═══════════════════════════════════════════
+async function getFeedback(text) {
+  const prompt = document.getElementById('promptText').textContent;
+  const wrap = document.getElementById('feedbackWrap');
+  wrap.innerHTML = `<div class="feedback" style="background:var(--surface2);border-color:var(--border)"><div class="feedback-head" style="color:var(--muted)">Analysing ${spinner()}</div></div>`;
+
+  const weakCtx = Object.entries(S.weakAreas).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([k])=>k).join(', ') || 'none';
+
+  try {
+    const res = await fetch(API, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 900,
+        system: `You are an expert English speaking coach for Spanish speakers. Analyse the spoken response and return ONLY valid JSON, no markdown fences.
+
+Schema:
+{
+  "fluency": 1-10,
+  "grammar": 1-10,
+  "vocabulary": 1-10,
+  "summary": "2 sentence assessment",
+  "grammarNote": "one specific grammar error found + correction, or null",
+  "vocabNote": "one vocabulary suggestion: what they said → more natural alternative, or null",
+  "fluencyNote": "one specific fluency tip for this response, or null",
+  "weakAreas": ["2-4 short tags like 'grammar: articles', 'vocabulary: phrasal verbs', 'fluency: filler words'"],
+  "encouragement": "one short uplifting sentence",
+  "xpGained": 10-40
+}
+
+User level: ${S.level}. Their known weak areas: ${weakCtx}. Pay special attention to these. Be encouraging but honest. XP: 10=poor, 20=ok, 30=good, 40=excellent.`,
+        messages: [{role:'user', content:`Prompt: "${prompt}"\nResponse: "${text}"`}]
+      })
+    });
+
+    const data = await res.json();
+    const raw = data.content?.map(b=>b.text||'').join('') || '';
+    const clean = raw.replace(/```json|```/g,'').trim();
+    const fb = JSON.parse(clean);
+
+    // Save session
+    const sessionEntry = {
+      date: new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'short'}),
+      topic: S.currentTopic,
+      f: fb.fluency, g: fb.grammar, v: fb.vocabulary,
+      summary: fb.summary
+    };
+    S.history.unshift(sessionEntry);
+    if (S.history.length > 20) S.history.pop();
+
+    trackWeakArea(fb.weakAreas || []);
+    gainXP(fb.xpGained || 20);
+    checkStreak();
+    save();
+
+    // Render feedback
+    const notes = [
+      fb.grammarNote ? `<div style="margin-bottom:10px"><div class="fb-label">Grammar</div><div class="fb-line">${fb.grammarNote}</div></div>` : '',
+      fb.vocabNote   ? `<div style="margin-bottom:10px"><div class="fb-label">Vocabulary</div><div class="fb-line">${fb.vocabNote}</div></div>` : '',
+      fb.fluencyNote ? `<div style="margin-bottom:10px"><div class="fb-label">Fluency</div><div class="fb-line">${fb.fluencyNote}</div></div>` : ''
+    ].filter(Boolean).join('');
+
+    wrap.innerHTML = `
+      <div class="feedback">
+        <div class="feedback-head">✓ Feedback · +${fb.xpGained} XP</div>
+        <div class="score-row">
+          <div class="score-tag"><div class="dot ${dotColor(fb.fluency)}"></div>Fluency ${fb.fluency}/10</div>
+          <div class="score-tag"><div class="dot ${dotColor(fb.grammar)}"></div>Grammar ${fb.grammar}/10</div>
+          <div class="score-tag"><div class="dot ${dotColor(fb.vocabulary)}"></div>Vocab ${fb.vocabulary}/10</div>
+        </div>
+        <div class="fb-line" style="margin-bottom:12px">${fb.summary}</div>
+        ${notes}
+        <div class="fb-line" style="color:var(--green)">💪 ${fb.encouragement}</div>
+      </div>`;
+
+    document.getElementById('vStatus').textContent = 'Tap to start';
+    document.getElementById('vTimer').textContent = '0:00';
+
+    // Auto-load next prompt after brief delay
+    setTimeout(loadPrompt, 1000);
+
+  } catch(e) {
+    wrap.innerHTML = `<div class="feedback error"><div class="feedback-head">Error</div><div class="fb-line">Could not get feedback. Check your connection and try again.</div></div>`;
+    document.getElementById('vStatus').textContent = 'Tap to start';
+    document.getElementById('vTimer').textContent = '0:00';
+  }
+}
+
+// ═══════════════════════════════════════════
+// LISTENING
+// ═══════════════════════════════════════════
+let audioInterval = null;
+let audioSec = 0;
+let audioTotal = 180;
+let audioPlaying = false;
+let listenContent = null;
+
+function toggleAudio() {
+  if (audioPlaying) {
+    clearInterval(audioInterval);
+    audioPlaying = false;
+    document.getElementById('playBtn').textContent = '▶ Play';
+  } else {
+    if (audioSec >= audioTotal) audioSec = 0;
+    audioPlaying = true;
+    document.getElementById('playBtn').textContent = '⏸ Pause';
+    audioInterval = setInterval(() => {
+      audioSec = Math.min(audioSec + 1, audioTotal);
+      const pct = (audioSec / audioTotal) * 100;
+      document.getElementById('progFill').style.width = pct + '%';
+      const m = Math.floor(audioSec/60), s = audioSec%60;
+      document.getElementById('pCurrent').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+      if (audioSec >= audioTotal) {
+        clearInterval(audioInterval);
+        audioPlaying = false;
+        document.getElementById('playBtn').textContent = '↺ Replay';
+      }
+    }, 1000);
+  }
+}
+
+async function newListening() {
+  clearInterval(audioInterval);
+  audioPlaying = false;
+  audioSec = 0;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('pCurrent').textContent = '0:00';
+  document.getElementById('playBtn').textContent = '▶ Play';
+  document.getElementById('readText').innerHTML = spinner();
+  document.getElementById('quizQ').textContent = 'Loading…';
+  document.getElementById('quizOpts').innerHTML = '';
+  document.getElementById('quizRes').style.display = 'none';
+
+  const accents = ['🇺🇸 American','🇬🇧 British','🇦🇺 Australian','🇨🇦 Canadian'];
+  const accent = accents[Math.floor(Math.random()*accents.length)];
+  const lvl = S.level;
+
+  const topics = ['daily habits','technology and our lives','a travel memory','working from home','food culture','environmental choices','social media','learning a new skill'];
+  const topic = topics[Math.floor(Math.random()*topics.length)];
+
+  document.getElementById('aTitle').textContent = topic.replace(/\b\w/g,c=>c.toUpperCase());
+  document.getElementById('aBadgeLevel').textContent = lvl;
+  document.getElementById('aBadgeAccent').textContent = accent;
+
+  try {
+    const res = await fetch(API, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 800,
+        system: `Create a listening comprehension exercise for an English learner. Level: ${lvl}. Return ONLY valid JSON, no markdown.
+Schema:
+{
+  "title": "short title",
+  "transcript": "150-180 word natural spoken monologue on the topic, calibrated to ${lvl} level. Conversational, as if someone is speaking. Use varied vocabulary appropriate to level.",
+  "durationSeconds": 150-200,
+  "question": "one comprehension question",
+  "options": ["correct answer", "wrong 1", "wrong 2", "wrong 3"],
+  "correctIndex": 0
+}`,
+        messages:[{role:'user',content:`Topic: "${topic}", accent style: ${accent}`}]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content?.map(b=>b.text||'').join('') || '';
+    const clean = raw.replace(/```json|```/g,'').trim();
+    listenContent = JSON.parse(clean);
+
+    audioTotal = listenContent.durationSeconds || 180;
+    const tm = Math.floor(audioTotal/60), ts = audioTotal%60;
+    document.getElementById('pTotal').textContent = `${tm}:${ts.toString().padStart(2,'0')}`;
+    document.getElementById('aTitle').textContent = listenContent.title || topic.replace(/\b\w/g,c=>c.toUpperCase());
+    document.getElementById('aBadgeDur').textContent = `~${Math.round(audioTotal/60)} min`;
+
+    document.getElementById('readText').innerHTML =
+      listenContent.transcript.split(' ').map(w => `<span class="word">${w} </span>`).join('');
+
+    // shuffle options
+    const opts = listenContent.options.map((o,i) => ({text:o, correct: i===listenContent.correctIndex}));
+    opts.sort(() => Math.random()-0.5);
+    listenContent._shuffled = opts;
+
+    document.getElementById('quizQ').textContent = listenContent.question;
+    document.getElementById('quizOpts').innerHTML = opts.map((o,i) =>
+      `<button class="quiz-opt" onclick="checkAnswer(this,${o.correct})">${o.text}</button>`
+    ).join('');
+
+  } catch(e) {
+    document.getElementById('readText').textContent = 'Could not load content. Tap "New clip" to try again.';
+  }
+}
+
+function checkAnswer(btn, correct) {
+  document.querySelectorAll('.quiz-opt').forEach(b => b.disabled = true);
+  btn.classList.add(correct ? 'correct' : 'wrong');
+  if (!correct && listenContent?._shuffled) {
+    document.querySelectorAll('.quiz-opt').forEach(b => {
+      if (b.textContent === listenContent.options[listenContent.correctIndex]) b.classList.add('correct');
+    });
+  }
+  const res = document.getElementById('quizRes');
+  res.style.display = 'block';
+  res.className = 'quiz-result ' + (correct ? 'correct' : 'wrong');
+  res.textContent = correct ? '✓ Correct! Great listening.' : '✗ Not quite — see the correct answer above.';
+  if (correct) { gainXP(15); toast('🎧 +15 XP for listening!'); }
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+updateHeader();
+updateLevelUI();
+renderWeakAreas();
+renderHistory();
+loadPrompt();
+</script>
+</body>
+</html>
